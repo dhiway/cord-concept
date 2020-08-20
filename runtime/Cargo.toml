@@ -1,11 +1,8 @@
 [package]
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['Dhiway<info@dhiway.com>']
 edition = '2018'
-homepage = 'https://substrate.dev'
-license = 'Unlicense'
-name = 'node-template-runtime'
-repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
-version = '2.0.0-rc5'
+name = 'cord-runtime'
+version = '0.0.1'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -61,6 +58,13 @@ features = ['derive']
 optional = true
 version = '1.0.101'
 
+[dependencies.session]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+package = 'pallet-session'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
 [dependencies.sp-api]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
@@ -86,6 +90,12 @@ tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
 [dependencies.sp-inherents]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.sp-io]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc5'
@@ -134,17 +144,11 @@ package = 'pallet-sudo'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
-[dependencies.system]
+[dependencies.frame-system]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 package = 'frame-system'
 tag = 'v2.0.0-rc5'
-version = '2.0.0-rc5'
-
-[dependencies.template]
-default-features = false
-package = 'pallet-template'
-path = '../pallets/template'
 version = '2.0.0-rc5'
 
 [dependencies.timestamp]
@@ -154,12 +158,42 @@ package = 'pallet-timestamp'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
 
-[dependencies.transaction-payment]
+[dependencies.pallet-transaction-payment]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
 package = 'pallet-transaction-payment'
 tag = 'v2.0.0-rc5'
 version = '2.0.0-rc5'
+
+# -- Pallets specific for this runtime --
+
+[dependencies.pallet-did]
+default-features = false
+path = '../pallets/pallet-did'
+package = 'pallet-did'
+
+[dependencies.validatorset]
+default-features = false
+path = '../pallets/substrate-validator-set'
+package = 'substrate-validator-set'
+
+[dependencies.rbac]
+default-features = false
+path = '../pallets/substrate-rbac'
+package = 'substrate-rbac'
+
+[dependencies.registrar]
+default-features = false
+path = '../pallets/registrar'
+package = 'pallet-registrar'
+
+[dependencies.pallet-schema]
+default-features = false 
+path = '../pallets/pallet-schema'
+version = '0.0.1'
+
+
+# -- End of Pallets specific for this runtime --
 
 [build-dependencies.wasm-builder-runner]
 git = 'https://github.com/paritytech/substrate.git'
@@ -183,6 +217,7 @@ std = [
     'sp-consensus-aura/std',
     'sp-core/std',
     'sp-inherents/std',
+	'sp-io/std',
     'sp-offchain/std',
     'sp-runtime/std',
     'sp-session/std',
@@ -190,8 +225,13 @@ std = [
     'sp-transaction-pool/std',
     'sp-version/std',
     'sudo/std',
-    'system/std',
+    'frame-system/std',
     'timestamp/std',
-    'transaction-payment/std',
-    'template/std',
+    'pallet-transaction-payment/std',
+    'pallet-did/std',
+	'validatorset/std',
+	'session/std',
+	'rbac/std',
+	'registrar/std',
+    'pallet-schema/std',
 ]
