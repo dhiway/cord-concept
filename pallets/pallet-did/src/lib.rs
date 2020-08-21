@@ -83,7 +83,7 @@ use frame_support::{
 };
 use frame_system::{self, ensure_signed};
 use sp_core::RuntimeDebug;
-use sp_io::hashing::blake2_256;
+use sp_core::hashing::blake2_256;
 use sp_runtime::traits::{IdentifyAccount, Member, Verify};
 use sp_std::{prelude::*, vec::Vec};
 
