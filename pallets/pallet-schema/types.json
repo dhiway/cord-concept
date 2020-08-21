@@ -1,14 +1,17 @@
 {
-    "PropName": "Vec<u8>",
-    "PropValue": "Vec<u8>",
-    "ProductProperty": {
-        "name": "PropName",
-        "value": "PropValue"
+    "SchemaName": "Vec<u8>",
+    "SchemaDesc": "Vec<u8>",
+    "SchemaVersion": "Vec<u8>",
+    "SchemaProperty": {
+        "name": "SchemaName",
+        "desc": "SchemaDesc",
+        "version": "SchemaVersion"
     },
-    "ProductId": "Vec<u8>",
-    "Product": {
-        "id": "ProductId",
+    "SchemaId": "Vec<u8>",
+    "Schema": {
+        "id": "SchemaId",
         "owner": "AccountId",
+        "hash": "Hash",
         "props": "Option<Vec<ProductProperty>>",
         "registered": "Moment"
     }

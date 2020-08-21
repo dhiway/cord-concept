@@ -19,9 +19,9 @@ mod tests;
 // General constraints to limit data size
 pub const SCHEMA_ID_MAX_LENGTH: usize = 24;
 pub const SCHEMA_NAME_MAX_LENGTH: usize = 24;
-pub const SCHEMA_VERSION_MAX_LENGTH: usize = 12;
+pub const SCHEMA_VERSION_MAX_LENGTH: usize = 8;
 pub const SCHEMA_DESC_MAX_LENGTH: usize = 256;
-pub const SCHEMA_MAX_PROPS: usize = 1;
+pub const SCHEMA_MAX_PROPS: usize = 4;
 
 // Custom types
 pub type SchemaId = Vec<u8>;
@@ -38,6 +38,7 @@ pub struct Schema<AccountId, Hash, Moment> {
     id: SchemaId,
     owner: AccountId,
     hash: Hash,
+    version: SchemaVersion,
     props: Option<Vec<SchemaProperty>>,
     registered: Moment,
 }
@@ -46,15 +47,13 @@ pub struct Schema<AccountId, Hash, Moment> {
 pub struct SchemaProperty {
     name: SchemaName,
     desc: SchemaDesc,
-    version: SchemaVersion,
 }
 
 impl SchemaProperty {
-    pub fn new(name: &[u8], desc: &[u8], version: &[u8]) -> Self {
+    pub fn new(name: &[u8], desc: &[u8]) -> Self {
         Self {
             name: name.to_vec(),
             desc: desc.to_vec(),
-            version: version.to_vec(),
         }
     }
 
@@ -65,13 +64,9 @@ impl SchemaProperty {
     pub fn desc(&self) -> &[u8] {
         self.desc.as_ref()
     }
-
-    pub fn version(&self) -> &[u8] {
-        self.version.as_ref()
-    }
 }
 
-pub trait Trait: frame_system::Trait + timestamp::Trait {
+pub trait Trait: system::Trait + timestamp::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type CreateRoleOrigin: EnsureOrigin<Self::Origin>;
 }
@@ -80,7 +75,7 @@ decl_storage! {
     trait Store for Module<T: Trait> as SchemaRegistry {
         pub Schemas get(fn schema_by_id): map hasher(blake2_128_concat) SchemaId => Option<Schema<T::AccountId, T::Hash, T::Moment>>;
         pub SchemasOfOrganization get(fn schemas_of_org): map hasher(blake2_128_concat) T::AccountId => Vec<SchemaId>;
-        pub OwnerOfSchema get(fn owner_of_schema): map hasher(blake2_128_concat) SchemaId => Option<T::AccountId>;
+        pub OwnerOfSchema get(fn owner_of): map hasher(blake2_128_concat) SchemaId => Option<T::AccountId>;
         pub SchemaByHash get(fn schema_by_hash):map hasher(opaque_blake2_256) T::Hash => Vec<SchemaId>;
     }
 }
@@ -91,7 +86,7 @@ decl_event!(
         AccountId = <T as system::Trait>::AccountId,
         Hash = <T as frame_system::Trait>::Hash,
     {
-        SchemaRegistered(AccountId, SchemaId, Hash),
+        SchemaRegistered(AccountId, SchemaId, SchemaVersion, Hash),
     }
 );
 
@@ -104,8 +99,7 @@ decl_error! {
         SchemaVersionMissing,
         SchemaTooManyProps,
         SchemaInvalidName,
-        SchemaInvalidDescription,
-        SchemaInvalidVersion,
+        SchemaInvalidDescription
     }
 }
 
@@ -115,37 +109,41 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = 10]
-        pub fn register_schema(origin, id: SchemaId, owner: T::AccountId, hash: T::Hash, 
-            props: Option<Vec<SchemaProperty>>) -> dispatch::DispatchResult {
+        pub fn register_schema(origin, id: SchemaId, owner: T::AccountId, version: SchemaVersion,
+                hash: T::Hash, props: Option<Vec<SchemaProperty>>) -> dispatch::DispatchResult {
 
             T::CreateRoleOrigin::ensure_origin(origin.clone())?;
             let who = ensure_signed(origin)?;
-            
+
             // Validate schema ID
             Self::validate_schema_id(&id)?;
+
+            // Validate schema version
+            Self::validate_schema_version(&version)?;
 
             // Validate schema props
             Self::validate_schema_props(&props)?;
 
             // Check schema doesn't exist yet (1 DB read)
             Self::validate_new_schema(&id)?;
-
-            // Create a schema instance
+            
+            // Create a product instance
             let schema = Self::new_schema()
                 .identified_by(id.clone())
                 .owned_by(owner.clone())
                 .schema_hash(hash.clone())
+                .schema_version(version.clone())
                 .registered_on(<timestamp::Module<T>>::now())
                 .with_props(props)
                 .build();
 
-            // Add schema & ownerOf (4 DB writes)
+            // Add product & ownerOf (3 DB writes)
             <Schemas<T>>::insert(&id, schema);
             <SchemasOfOrganization<T>>::append(&owner, &id);
             <OwnerOfSchema<T>>::insert(&id, &owner);
             <SchemaByHash<T>>::append(&hash, &id);
             
-            Self::deposit_event(RawEvent::SchemaRegistered(who, id, hash));
+            Self::deposit_event(RawEvent::SchemaRegistered(who, id, version, hash));
 
             Ok(())
         }
@@ -167,8 +165,17 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
+    pub fn validate_schema_version(version: &[u8]) -> Result<(), Error<T>> {
+        ensure!(!version.is_empty(), Error::<T>::SchemaVersionMissing);
+        // ensure!(
+        //     !<Schemas<T>>::contains_key(schema::schema_version),
+        //     Error::<T>::SchemaVersionExists
+        // );
+        Ok(())
+    }
+
     pub fn validate_new_schema(id: &[u8]) -> Result<(), Error<T>> {
-        // TODO - Chnage this to check hash
+        // Product existence check
         ensure!(
             !<Schemas<T>>::contains_key(id),
             Error::<T>::SchemaIdExists
@@ -191,14 +198,6 @@ impl<T: Trait> Module<T> {
                     prop.desc().len() <= SCHEMA_DESC_MAX_LENGTH,
                     Error::<T>::SchemaInvalidDescription
                 );
-                ensure!(
-                    !prop.version().is_empty(), 
-                    Error::<T>::SchemaVersionMissing
-                );
-                ensure!(
-                    prop.version().len() <= SCHEMA_VERSION_MAX_LENGTH,
-                    Error::<T>::SchemaInvalidVersion
-                );
             }
         }
         Ok(())
@@ -215,6 +214,7 @@ where
     id: SchemaId,
     owner: AccountId,
     hash: Hash,
+    version: SchemaVersion,
     props: Option<Vec<SchemaProperty>>,
     registered: Moment,
 }
@@ -239,6 +239,11 @@ where
         self
     }
 
+    pub fn schema_version(mut self, version: SchemaVersion) -> Self {
+        self.version = version;
+        self
+    }
+
     pub fn with_props(mut self, props: Option<Vec<SchemaProperty>>) -> Self {
         self.props = props;
         self
@@ -254,6 +259,7 @@ where
             id: self.id,
             owner: self.owner,
             hash: self.hash,
+            version: self.version,
             props: self.props,
             registered: self.registered,
         }

@@ -14,7 +14,7 @@ use sp_runtime::{
     Perbill,
 };
 
-use crate as schema_registry;
+use crate as product_registry;
 
 impl_outer_origin! {
     pub enum Origin for Test {}
@@ -64,14 +64,12 @@ impl system::Trait for Test {
     type AccountData = ();
     type OnNewAccount = ();
     type OnKilledAccount = ();
-    type SystemWeightInfo = ();
 }
 
 impl timestamp::Trait for Test {
     type Moment = u64;
     type OnTimestampSet = ();
     type MinimumPeriod = ();
-    type WeightInfo = ();
 }
 
 impl Trait for Test {
