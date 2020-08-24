@@ -37,12 +37,6 @@ default-features = false
 tag = 'v2.0.0-rc6'
 version = '2.0.0-rc6'
 
-#[dependencies.sp-io]
-#git = 'https://github.com/paritytech/substrate.git'
-#default-features = false
-#tag = 'v2.0.0-rc6'
-#version = '2.0.0-rc6'
-
 [dependencies.sp-std]
 git = 'https://github.com/paritytech/substrate.git'
 default-features = false

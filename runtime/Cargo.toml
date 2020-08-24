@@ -145,12 +145,6 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc6'
 version = '2.0.0-rc6'
 
-#[dependencies.sp-io]
-#default-features = false
-#git = 'https://github.com/paritytech/substrate.git'
-#tag = 'v2.0.0-rc6'
-#version = '2.0.0-rc6'
-
 [dependencies.sp-std]
 default-features = false
 git = 'https://github.com/paritytech/substrate.git'
