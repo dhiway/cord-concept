@@ -37,19 +37,19 @@ cargo build --release
 Purge any existing dev chain state:
 
 ```bash
-./target/release/node-template purge-chain --dev
+./target/release/cord purge-chain --dev
 ```
 
 Start a dev chain:
 
 ```bash
-./target/release/node-template --dev
+./target/release/cord --dev
 ```
 
 Or, start a dev chain with detailed logging:
 
 ```bash
-RUST_LOG=debug RUST_BACKTRACE=1 ./target/release/node-template -lruntime=debug --dev
+RUST_LOG=debug RUST_BACKTRACE=1 ./target/release/cord -lruntime=debug --dev
 ```
 
 ### Multi-Node Local Testnet
@@ -99,7 +99,7 @@ After the node has been [built](#build), refer to the embedded documentation to 
 capabilities and configuration parameters that it exposes:
 
 ```shell
-./target/release/node-template --help
+./target/release/cord --help
 ```
 
 ### Runtime
