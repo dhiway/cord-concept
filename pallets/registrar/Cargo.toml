@@ -56,7 +56,7 @@ git = 'https://github.com/paritytech/substrate.git'
 tag = 'v2.0.0-rc6'
 version = '2.0.0-rc6'
 
-[dependencies.did]
+[dependencies.pallet-did]
 default-features = false
 path = '../pallet-did'
 package = 'pallet-did'
@@ -67,7 +67,7 @@ std = [
     'codec/std',
     'frame-support/std',
     'frame-system/std',
-    'did/std',
+    'pallet-did/std',
     'sp-runtime/std',
     'sp-std/std',
 ]
