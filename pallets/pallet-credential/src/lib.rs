@@ -25,7 +25,6 @@ pub const CRED_MAX_PROPS: usize = 1;
 pub type CredId = Vec<u8>;
 pub type CredSubject = Vec<u8>;
 
-
 // Credential contains master data (aka class-level) about a credential item.
 // This data is typically registered when a credential is signed, and remains static.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
@@ -39,7 +38,7 @@ pub struct Credential<AccountId, Hash, Moment> {
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
 pub struct CredProperty {
-    subject: CredSubject
+    subject: CredSubject,
 }
 
 impl CredProperty {
@@ -61,10 +60,10 @@ pub trait Trait: frame_system::Trait + timestamp::Trait {
 
 decl_storage! {
     trait Store for Module<T: Trait> as CredentialRegistry {
-        pub Credentials get(fn cred_by_id): map hasher(blake2_128_concat) CredId => Option<Credential<T::AccountId, T::Hash, T::Moment>>;
-        pub CredsOfOrganization get(fn cred_of_org): map hasher(blake2_128_concat) T::AccountId => Vec<CredId>;
-        pub IssuerOfCred get(fn issuer_of_cred): map hasher(blake2_128_concat) CredId => Option<T::AccountId>;
-        pub CredByHash get(fn cred_by_hash):map hasher(opaque_blake2_256) T::Hash => Vec<CredId>;
+    pub Credentials get(fn cred_by_id): map hasher(blake2_128_concat) CredId => Option<Credential<T::AccountId, T::Hash, T::Moment>>;
+    pub CredsOfOrganization get(fn cred_of_org): map hasher(blake2_128_concat) T::AccountId => Vec<CredId>;
+    pub IssuerOfCred get(fn issuer_of_cred): map hasher(blake2_128_concat) CredId => Option<T::AccountId>;
+    pub CredByHash get(fn cred_by_hash):map hasher(opaque_blake2_256) T::Hash => Vec<CredId>;
     }
 }
 
@@ -75,59 +74,83 @@ decl_event!(
         Hash = <T as frame_system::Trait>::Hash,
     {
         CredentialRegistered(AccountId, CredId, Hash),
+        CredentialRevoked(AccountId, CredId, Hash),
     }
 );
 
 decl_error! {
     pub enum Error for Module<T: Trait> {
-        CredIdMissing,
-        CredIdTooLong,
-        CredIdExists,
-        CredInvalidSubject,
-        CredTooManyProps,
+    CredIdMissing,
+    CredIdTooLong,
+    CredIdExists,
+    CredInvalidSubject,
+    CredTooManyProps,
     }
 }
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-        type Error = Error<T>;
-        fn deposit_event() = default;
+    type Error = Error<T>;
+    fn deposit_event() = default;
 
-        #[weight = 10]
-        pub fn register_credential(origin, id: CredId, owner: T::AccountId, hash: T::Hash, 
-            props: Option<Vec<CredProperty>>) -> dispatch::DispatchResult {
+    #[weight = 10]
+    pub fn register_credential(origin, id: CredId, owner: T::AccountId, hash: T::Hash,
+        props: Option<Vec<CredProperty>>) -> dispatch::DispatchResult {
 
-            T::CreateRoleOrigin::ensure_origin(origin.clone())?;
-            let who = ensure_signed(origin)?;
-            
-            // Validate Cred ID
-            Self::validate_cred_id(&id)?;
+        T::CreateRoleOrigin::ensure_origin(origin.clone())?;
+        let who = ensure_signed(origin)?;
 
-            // Validate credential props
-            Self::validate_cred_props(&props)?;
+        // Validate Cred ID
+        Self::validate_cred_id(&id)?;
 
-            // Check credential doesn't exist yet (1 DB read)
-            Self::validate_new_credential(&id)?;
+        // Validate credential props
+        Self::validate_cred_props(&props)?;
 
-            // Create a credential instance
-            let credential = Self::new_credential()
-                .identified_by(id.clone())
-                .owned_by(owner.clone())
-                .credential_hash(hash.clone())
-                .registered_on(<timestamp::Module<T>>::now())
-                .with_props(props)
-                .build();
+        // Check credential doesn't exist yet (1 DB read)
+        Self::validate_new_credential(&id)?;
 
-            // Add Cred & ownerOf (4 DB writes)
-            <Credentials<T>>::insert(&id, credential);
-            <CredsOfOrganization<T>>::append(&owner, &id);
-            <IssuerOfCred<T>>::insert(&id, &owner);
-            <CredByHash<T>>::append(&hash, &id);
-            
-            Self::deposit_event(RawEvent::CredentialRegistered(who, id, hash));
+        // Create a credential instance
+        let credential = Self::new_credential()
+        .identified_by(id.clone())
+        .owned_by(owner.clone())
+        .credential_hash(hash.clone())
+        .registered_on(<timestamp::Module<T>>::now())
+        .with_props(props)
+        .build();
 
-            Ok(())
-        }
+        // Add Cred & ownerOf (4 DB writes)
+        <Credentials<T>>::insert(&id, credential);
+        <CredsOfOrganization<T>>::append(&owner, &id);
+        <IssuerOfCred<T>>::insert(&id, &owner);
+        <CredByHash<T>>::append(&hash, &id);
+
+        Self::deposit_event(RawEvent::CredentialRegistered(who, id, hash));
+
+        Ok(())
+    }
+
+    #[weight = 100]
+    pub fn revoke_credential(origin, id: CredId, owner: T::AccountId, hash: T::Hash) -> dispatch::DispatchResult {
+
+        T::CreateRoleOrigin::ensure_origin(origin.clone())?;
+        let who = ensure_signed(origin)?;
+
+        // Validate Cred ID
+        Self::validate_cred_id(&id)?;
+
+        // Check credential doesn't exist yet (1 DB read)
+        Self::validate_credential_exists(&id)?;
+
+        // Remove Cred & ownerOf (4 DB writes)
+        <Credentials<T>>::remove(&id);
+        <CredsOfOrganization<T>>::remove(&owner);
+        <IssuerOfCred<T>>::remove(&id);
+        <CredByHash<T>>::remove(&hash);
+
+        Self::deposit_event(RawEvent::CredentialRevoked(who, id, hash));
+
+        Ok(())
+    }
     }
 }
 
@@ -139,10 +162,7 @@ impl<T: Trait> Module<T> {
 
     pub fn validate_cred_id(id: &[u8]) -> Result<(), Error<T>> {
         ensure!(!id.is_empty(), Error::<T>::CredIdMissing);
-        ensure!(
-            id.len() <= CRED_ID_MAX_LENGTH,
-            Error::<T>::CredIdTooLong
-        );
+        ensure!(id.len() <= CRED_ID_MAX_LENGTH, Error::<T>::CredIdTooLong);
         Ok(())
     }
 
@@ -155,12 +175,17 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
+    pub fn validate_credential_exists(id: &[u8]) -> Result<(), Error<T>> {
+        ensure!(
+            <Credentials<T>>::contains_key(id),
+            Error::<T>::CredIdMissing
+        );
+        Ok(())
+    }
+
     pub fn validate_cred_props(props: &Option<Vec<CredProperty>>) -> Result<(), Error<T>> {
         if let Some(props) = props {
-            ensure!(
-                props.len() <= CRED_MAX_PROPS,
-                Error::<T>::CredTooManyProps,
-            );
+            ensure!(props.len() <= CRED_MAX_PROPS, Error::<T>::CredTooManyProps,);
             for prop in props {
                 ensure!(
                     prop.subject().len() <= CRED_SUBJ_MAX_LENGTH,
