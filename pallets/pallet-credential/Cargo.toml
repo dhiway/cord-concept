@@ -1,0 +1,58 @@
+[package]
+name = 'pallet-credential'
+version = '0.0.1'
+description = 'Credential Registry pallet'
+edition = '2018'
+authors = ['Dhiway <info@dhiway.com>']
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '1.3.1'
+
+[dependencies.frame-support]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.frame-system]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dev-dependencies.sp-core]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dev-dependencies.sp-io]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dev-dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[dependencies.timestamp]
+default_features = false
+git = 'https://github.com/paritytech/substrate.git'
+package = 'pallet-timestamp'
+tag = 'v2.0.0-rc5'
+version = '2.0.0-rc5'
+
+[features]
+default = ['std']
+std = [
+    'codec/std',
+    'frame-support/std',
+    'frame-system/std',
+    'timestamp/std',
+]
