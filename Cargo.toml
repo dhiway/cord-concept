@@ -5,9 +5,10 @@ panic = 'unwind'
 members = [
     'node',
     'pallets/pallet-did',
-   	'pallets/pallet-schema',
+    'pallets/pallet-schema',
+    'pallets/pallet-credential',
     'pallets/substrate-validator-set',
-	'pallets/substrate-rbac',
-	'pallets/registrar',
+    'pallets/substrate-rbac',
+    'pallets/registrar',
     'runtime'
 ]
