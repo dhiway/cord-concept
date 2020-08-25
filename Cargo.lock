@@ -3305,6 +3305,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-credential"
+version = "0.0.1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "pallet-did"
 version = "2.0.0-rc5"
 dependencies = [
