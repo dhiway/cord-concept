@@ -1,0 +1,14 @@
+{
+    "CredSubject": "Vec<u8>",
+    "CredProperty": {
+        "subject": "CredSubject",
+    },
+    "CredId": "Vec<u8>",
+    "Credential": {
+        "id": "CredId",
+        "owner": "AccountId",
+        "hash": "Hash",
+        "props": "Option<Vec<ProductProperty>>",
+        "registered": "Moment"
+    }
+}
