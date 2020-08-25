@@ -3,9 +3,14 @@
 use super::*;
 use crate::{mock::*, Error};
 use frame_support::{assert_noop, assert_ok, dispatch};
-use sp_core::{H256};
+use sp_core::H256;
 
-pub fn store_test_credential<T: Trait>(id: CredId, owner: T::AccountId, hash: T::Hash, registered: T::Moment) {
+pub fn store_test_credential<T: Trait>(
+    id: CredId,
+    owner: T::AccountId,
+    hash: T::Hash,
+    registered: T::Moment,
+) {
     Credentials::<T>::insert(
         id.clone(),
         Credential {
@@ -22,7 +27,6 @@ const TEST_ORGANIZATION: &str = "Dhiway Test";
 const TEST_SENDER: &str = "Ashok";
 const TEST_CRED_ID: &str = "00012345600012";
 const TEST_CRED_SUBJ: &str = "Test Event Completion for Dhiway";
-
 
 #[test]
 fn create_product_without_props() {
@@ -84,10 +88,9 @@ fn create_cred_with_valid_props() {
             id.clone(),
             owner.clone(),
             hash.clone(),
-            Some(vec![
-                CredProperty::new(
-                    &TEST_CRED_SUBJ.as_bytes().to_owned())
-            ]),
+            Some(vec![CredProperty::new(
+                &TEST_CRED_SUBJ.as_bytes().to_owned(),
+            )]),
         );
 
         assert_ok!(result);
@@ -99,10 +102,9 @@ fn create_cred_with_valid_props() {
                 owner: owner,
                 hash: hash.clone(),
                 registered: now,
-                props: Some(vec![
-                    CredProperty::new(
-                    &TEST_CRED_SUBJ.as_bytes().to_owned()) 
-                ]),
+                props: Some(vec![CredProperty::new(
+                    &TEST_CRED_SUBJ.as_bytes().to_owned()
+                )]),
             })
         );
 
@@ -161,7 +163,7 @@ fn create_cred_with_long_id() {
         assert_noop!(
             CredentialRegistry::register_credential(
                 Origin::signed(account_key(TEST_SENDER)),
-		b"ajasljdfalsjfasdfjasfasdlfjasdflkajdsflkajdsfalksjdfalksdjfadfasdf".to_vec(),
+                b"ajasljdfalsjfasdfjasfasdlfjasdflkajdsflkajdsfalksjdfalksdjfadfasdf".to_vec(),
                 account_key(TEST_ORGANIZATION),
                 hash.clone(),
                 None
@@ -228,9 +230,9 @@ fn create_cred_with_invalid_subject() {
                 TEST_CRED_ID.as_bytes().to_owned(),
                 account_key(TEST_ORGANIZATION),
                 hash.clone(),
-                Some(vec![
-                    CredProperty::new(b"This is a long event name where I can't get it for a particular person")
-                ])
+                Some(vec![CredProperty::new(
+                    b"This is a long event name where I can't get it for a particular person"
+                )])
             ),
             Error::<Test>::CredInvalidSubject
         );
