@@ -142,10 +142,10 @@ decl_module! {
         Self::validate_credential_exists(&id)?;
 
         // Remove Cred & ownerOf (4 DB writes)
-        <Credentials<T>>::remove(&id, credential);
-        <CredsOfOrganization<T>>::remove(&owner, &id);
-        <IssuerOfCred<T>>::remove(&id, &owner);
-        <CredByHash<T>>::remove(&hash, &id);
+        <Credentials<T>>::remove(&id);
+        <CredsOfOrganization<T>>::remove(&owner);
+        <IssuerOfCred<T>>::remove(&id);
+        <CredByHash<T>>::remove(&hash);
 
         Self::deposit_event(RawEvent::CredentialRevoked(who, id, hash));
 
